@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff4f8">
+<meta name="description" content="Horario del colegio para la semana: materias por la mañana, extraescolares por la tarde y anotaciones del día.">
+<title>Mi Horario del Colegio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html, body, button, input, textarea {
+    font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Segoe Print", cursive;
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    color: #3a2a4a;
+    background:
+      radial-gradient(620px 280px at 0% -10%, #ffd6ea, transparent 55%),
+      radial-gradient(520px 260px at 100% 0%, #fff1b8, transparent 50%),
+      radial-gradient(560px 300px at 50% 110%, #d5f0ff, transparent 55%),
+      #fff8f4;
+  }
+  button, input, textarea { font-size: 16px; }
+  button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 3px solid #7c4dff; outline-offset: 2px; }
+  .is-hidden { display: none !important; }
+  .day-on { background: #7c4dff; color: white; }
+</style>
+</head>
+<body>
+  <main class="mx-auto w-full max-w-md px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    <header>
+      <p class="text-sm text-fuchsia-700">📚 Tu semana, a lo grande</p>
+      <h1 class="mt-1 text-4xl leading-none text-fuchsia-800">Mi Horario del Colegio</h1>
+      <p class="mt-2 text-base leading-snug text-violet-900/80">El lunes y el martes traen un ejemplo. Lo puedes cambiar: se guarda solo en este móvil.</p>
+    </header>
+
+    <div id="days" class="mt-5 grid grid-cols-5 gap-1" role="group" aria-label="Días de la semana"></div>
+
+    <section class="mt-5 rounded-[28px] border-4 border-amber-200 bg-white p-4 shadow-lg shadow-amber-100" aria-labelledby="titulo-manana">
+      <h2 id="titulo-manana" class="text-2xl text-amber-700">🏫 Colegio (Mañana)</h2>
+      <div id="materias" class="mt-3 space-y-3"></div>
+      <button id="add-materia" type="button" class="mt-4 w-full rounded-3xl bg-amber-300 px-4 py-4 text-lg font-bold text-amber-950 active:scale-[0.98]">+ Añadir materia</button>
+    </section>
+
+    <section class="mt-4 rounded-[28px] border-4 border-sky-200 bg-white p-4 shadow-lg shadow-sky-100" aria-labelledby="titulo-tarde">
+      <h2 id="titulo-tarde" class="text-2xl text-sky-700">⚽ Extraescolares (Tarde)</h2>
+      <div id="actividades" class="mt-3 space-y-3"></div>
+      <button id="add-actividad" type="button" class="mt-4 w-full rounded-3xl bg-sky-300 px-4 py-4 text-lg font-bold text-sky-950 active:scale-[0.98]">+ Añadir actividad</button>
+    </section>
+
+    <section class="mt-4 rounded-[28px] border-4 border-rose-200 bg-white p-4 shadow-lg shadow-rose-100" aria-labelledby="titulo-notas">
+      <h2 id="titulo-notas" class="text-2xl text-rose-600">📝 Anotaciones del día</h2>
+      <label for="notas" class="mt-2 block text-sm text-rose-800/80">Lo que no se te puede olvidar hoy</label>
+      <textarea id="notas" rows="6" class="mt-2 min-h-40 w-full rounded-3xl border-2 border-rose-100 bg-rose-50 px-4 py-3 text-base leading-relaxed outline-none focus:border-rose-300" placeholder="Ejemplo: traer el estuche de colores"></textarea>
+      <p id="saved" class="mt-2 min-h-6 text-sm text-emerald-700" role="status"></p>
+    </section>
+  </main>
+
+  <div id="confirm" class="is-hidden fixed inset-0 z-50 grid place-items-end sm:place-items-center" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <button id="confirm-backdrop" type="button" class="absolute inset-0 bg-fuchsia-950/40" aria-label="Cerrar"></button>
+    <div class="relative m-0 w-full max-w-md rounded-t-[28px] border-4 border-rose-200 bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:rounded-[28px]">
+      <h2 id="confirm-title" class="text-2xl text-rose-700">¿Lo quitamos?</h2>
+      <p id="confirm-text" class="mt-2 text-base leading-snug"></p>
+      <div class="mt-4 grid gap-2">
+        <button id="confirm-yes" type="button" class="rounded-3xl bg-rose-400 px-4 py-4 text-lg font-bold text-white">Sí, quitar</button>
+        <button id="confirm-no" type="button" class="rounded-3xl bg-amber-200 px-4 py-4 text-lg font-bold text-amber-950">No, dejarlo</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const STORAGE_KEY = "horarioColegio";
+const DAYS = [
+  { id: "lunes", label: "Lunes" },
+  { id: "martes", label: "Martes" },
+  { id: "miercoles", label: "Miércoles" },
+  { id: "jueves", label: "Jueves" },
+  { id: "viernes", label: "Viernes" }
+];
+
+function emptyDay() {
+  return { materias: [], actividades: [], notas: "" };
+}
+
+function item(hora, nombre) {
+  return { id: hora + "-" + nombre, hora: hora, nombre: nombre };
+}
+
+function seed() {
+  return {
+    lunes: {
+      materias: [
+        item("9:00", "📖 Lengua"),
+        item("10:00", "➕ Matemáticas"),
+        item("11:30", "🌍 Conocimiento del medio"),
+        item("12:30", "🎨 Plástica")
+      ],
+      actividades: [
+        item("16:00", "⚽ Fútbol"),
+        item("17:30", "🗣️ Inglés")
+      ],
+      notas: "Traer el estuche de colores."
+    },
+    martes: {
+      materias: [
+        item("9:00", "➕ Matemáticas"),
+        item("10:00", "🎵 Música"),
+        item("11:30", "🏃 Educación física"),
+        item("12:30", "📖 Lengua")
+      ],
+      actividades: [
+        item("16:30", "🖌️ Pintura")
+      ],
+      notas: "Hoy hay gimnasia. Llevar ropa de deporte."
+    },
+    miercoles: emptyDay(),
+    jueves: emptyDay(),
+    viernes: emptyDay()
+  };
+}
+
+const $ = (id) => document.getElementById(id);
+let state = load();
+let current = initialDay();
+let pending = null;
+let savedTimer = 0;
+
+function todayId() {
+  const map = { 1: "lunes", 2: "martes", 3: "miercoles", 4: "jueves", 5: "viernes" };
+  return map[new Date().getDay()] || "lunes";
+}
+
+function initialDay() {
+  const today = todayId();
+  const day = state[today];
+  const hasContent = day.materias.length || day.actividades.length || day.notas.trim();
+  return hasContent ? today : "lunes";
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return seed();
+    const data = JSON.parse(raw);
+    const next = {};
+    DAYS.forEach((day) => {
+      const source = data[day.id] || {};
+      next[day.id] = {
+        materias: Array.isArray(source.materias) ? source.materias : [],
+        actividades: Array.isArray(source.actividades) ? source.actividades : [],
+        notas: typeof source.notas === "string" ? source.notas : ""
+      };
+    });
+    return next;
+  } catch (err) {
+    return seed();
+  }
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const note = $("saved");
+  if (!note) return;
+  note.textContent = "¡Guardado!";
+  window.clearTimeout(savedTimer);
+  savedTimer = window.setTimeout(() => { note.textContent = ""; }, 1200);
+}
+
+function captureNotes() {
+  const box = $("notas");
+  if (box) state[current].notas = box.value;
+}
+
+function renderDays() {
+  const bar = $("days");
+  bar.replaceChildren();
+  DAYS.forEach((day) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = day.label;
+    button.setAttribute("aria-pressed", day.id === current ? "true" : "false");
+    button.className = "min-h-14 rounded-2xl px-0.5 py-2 text-[13px] font-bold leading-tight tracking-tight " + (day.id === current ? "day-on" : "bg-white text-fuchsia-800 shadow");
+    button.addEventListener("click", () => setDay(day.id));
+    bar.appendChild(button);
+  });
+}
+
+function renderList(container, items, kind) {
+  container.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "rounded-2xl bg-slate-50 px-3 py-3 text-base text-slate-600";
+    empty.textContent = kind === "materias" ? "Todavía no hay materias." : "Todavía no hay actividades.";
+    container.appendChild(empty);
+    return;
+  }
+  items.forEach((entry) => {
+    const row = document.createElement("div");
+    row.dataset.id = entry.id;
+    row.dataset.kind = kind;
+    row.className = "grid grid-cols-[minmax(0,1fr)_3rem] items-center gap-2";
+    const hora = document.createElement("input");
+    hora.dataset.field = "hora";
+    hora.value = entry.hora;
+    hora.maxLength = 22;
+    hora.placeholder = "9:00";
+    hora.setAttribute("aria-label", "Horario");
+    hora.autocomplete = "off";
+    hora.className = "w-full rounded-2xl border-2 border-violet-100 bg-violet-50 px-3 py-3 text-base outline-none focus:border-violet-300";
+    const nombre = document.createElement("input");
+    nombre.dataset.field = "nombre";
+    nombre.value = entry.nombre;
+    nombre.maxLength = 60;
+    nombre.placeholder = kind === "materias" ? "Materia" : "Actividad";
+    nombre.setAttribute("aria-label", kind === "materias" ? "Materia" : "Actividad");
+    nombre.autocomplete = "off";
+    nombre.className = "min-w-0 w-full rounded-2xl border-2 border-violet-100 bg-violet-50 px-3 py-3 text-base outline-none focus:border-violet-300";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.dataset.action = "delete";
+    remove.textContent = "🗑️";
+    remove.setAttribute("aria-label", "Quitar " + (entry.nombre || "este elemento"));
+    remove.className = "row-span-2 grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-xl";
+    row.append(hora, remove, nombre);
+    container.appendChild(row);
+  });
+}
+
+function render() {
+  renderDays();
+  const day = state[current];
+  renderList($("materias"), day.materias, "materias");
+  renderList($("actividades"), day.actividades, "actividades");
+  $("notas").value = day.notas;
+}
+
+function setDay(next) {
+  if (next === current) return;
+  captureNotes();
+  persist();
+  current = next;
+  render();
+}
+
+function add(kind) {
+  captureNotes();
+  const entry = { id: uid(), hora: "", nombre: "" };
+  state[current][kind].push(entry);
+  persist();
+  render();
+  const field = document.querySelector('[data-kind="' + kind + '"][data-id="' + entry.id + '"] [data-field="nombre"]');
+  if (field) field.focus();
+}
+
+function askDelete(kind, id) {
+  const entry = state[current][kind].find((item) => item.id === id);
+  if (!entry) return;
+  pending = { kind: kind, id: id };
+  const what = kind === "materias" ? "la materia" : "la actividad";
+  $("confirm-text").textContent = entry.nombre
+    ? "¿Quitamos " + entry.nombre + " del horario?"
+    : "¿Quitamos " + what + " vacía?";
+  $("confirm").classList.remove("is-hidden");
+  $("confirm-no").focus();
+}
+
+function closeConfirm() {
+  pending = null;
+  $("confirm").classList.add("is-hidden");
+}
+
+function confirmDelete() {
+  if (!pending) return;
+  const kind = pending.kind;
+  state[current][kind] = state[current][kind].filter((item) => item.id !== pending.id);
+  closeConfirm();
+  persist();
+  render();
+}
+
+function onInput(event) {
+  const row = event.target.closest("[data-id]");
+  if (!row) return;
+  const list = state[current][row.dataset.kind];
+  const entry = list.find((item) => item.id === row.dataset.id);
+  if (!entry) return;
+  entry[event.target.dataset.field] = event.target.value;
+  persist();
+}
+
+function onClick(event) {
+  const button = event.target.closest("[data-action='delete']");
+  if (!button) return;
+  const row = button.closest("[data-id]");
+  askDelete(row.dataset.kind, row.dataset.id);
+}
+
+$("materias").addEventListener("input", onInput);
+$("actividades").addEventListener("input", onInput);
+$("materias").addEventListener("click", onClick);
+$("actividades").addEventListener("click", onClick);
+$("add-materia").addEventListener("click", () => add("materias"));
+$("add-actividad").addEventListener("click", () => add("actividades"));
+$("notas").addEventListener("input", () => {
+  state[current].notas = $("notas").value;
+  persist();
+});
+$("confirm-yes").addEventListener("click", confirmDelete);
+$("confirm-no").addEventListener("click", closeConfirm);
+$("confirm-backdrop").addEventListener("click", closeConfirm);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !$("confirm").classList.contains("is-hidden")) closeConfirm();
+});
+window.addEventListener("pagehide", () => {
+  captureNotes();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+});
+
+render();
+</script>
+</body>
+</html>
