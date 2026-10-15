@@ -27,6 +27,7 @@
 </head>
 <body>
   <main class="mx-auto w-full max-w-md px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+    <a href="/" class="mb-2 inline-block text-sm underline opacity-70">← Horarios</a>
     <header class="border-b border-blue-100 pb-4">
       <p class="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Semana lectiva</p>
       <h1 class="mt-1 text-3xl font-semibold tracking-tight">Mi Horario del Instituto</h1>
@@ -163,11 +164,15 @@ function load() {
   }
 }
 
+function store() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); return true; } catch (err) { return false; }
+}
+
 function persist() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const ok = store();
   const note = $("saved");
   if (!note) return;
-  note.textContent = "Guardado";
+  note.textContent = ok ? "Guardado" : "No se puede guardar en este navegador (¿modo privado?)";
   window.clearTimeout(savedTimer);
   savedTimer = window.setTimeout(() => { note.textContent = ""; }, 1200);
 }
@@ -320,7 +325,7 @@ document.addEventListener("keydown", (event) => {
 });
 window.addEventListener("pagehide", () => {
   captureNotes();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  store();
 });
 
 render();

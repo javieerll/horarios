@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f3fb">
+<meta name="description" content="Horario de la semana para el colegio y para el instituto.">
+<title>Horarios</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%85%3C/text%3E%3C/svg%3E">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100dvh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #1f1a2e; background: #f6f3fb; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  main { width: 100%; max-width: 420px; }
+  h1 { font-size: 2rem; margin: 0 0 6px; }
+  p { margin: 0 0 22px; color: #5b5470; }
+  a.card { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 12px; box-shadow: 0 6px 20px rgba(60, 40, 110, .08); border: 2px solid transparent; }
+  a.card:hover, a.card:focus-visible { border-color: #7c4dff; outline: none; }
+  .emoji { font-size: 2.2rem; }
+  .title { font-size: 1.2rem; font-weight: 700; }
+  .sub { font-size: .9rem; color: #6b6480; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Horarios</h1>
+  <p>Elige cuál quieres abrir. Lo que apuntes se guarda solo en este móvil.</p>
+  <a class="card" href="/horario-colegio.html">
+    <span class="emoji" aria-hidden="true">📚</span>
+    <span><span class="title">Colegio</span><br><span class="sub">Materias, extraescolares y notas</span></span>
+  </a>
+  <a class="card" href="/horario-instituto.html">
+    <span class="emoji" aria-hidden="true">📘</span>
+    <span><span class="title">Instituto</span><br><span class="sub">Materias, extraescolares y notas</span></span>
+  </a>
+</main>
+</body>
+</html>
